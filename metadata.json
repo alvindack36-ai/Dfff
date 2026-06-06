@@ -1,0 +1,6 @@
+{
+  "name": "SimGate Gateway",
+  "description": "SMS Gateway controlled by a remote Supabase dashboard, with dual SIM, polling, heartbeat and offline-first queue synchronization.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

@@ -1,0 +1,16 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    
+    <!-- Background circle shading representing Emerald green accent -->
+    <path
+        android:fillColor="#16A34A"
+        android:pathData="M54,54m-38,0a38,38 0,1 1,76 0a38,38 0,1 1,-76 0" />
+
+    <!-- Sleek cellular transmission + shield overlay representing SimGate -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M54,32 L68,38 L68,52 C68,62 62,70 54,73 C46,70 40,62 40,52 L40,38 Z M54,40 C50.5,40 48,42.5 48,46 C48,47.8 48.8,49.2 50,50.2 L54,54.2 L58,50.2 C59.2,49.2 60,47.8 60,46 C60,42.5 57.5,40 54,40 Z" />
+</vector>
