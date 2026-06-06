@@ -158,6 +158,10 @@ class GatewayViewModel @Inject constructor(
         _deviceMutedToken()
     }
 
+    fun setConnectionError(error: String?) {
+        _connectionError.value = error
+    }
+
     private fun _deviceMutedToken() {
         _deviceToken.value = "•••••••••"
     }

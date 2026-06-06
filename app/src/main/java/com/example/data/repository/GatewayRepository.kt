@@ -62,7 +62,14 @@ class GatewayRepository @Inject constructor(
             
             preferencesManager.saveCredentials(apiBase, deviceId, token)
 
-            val request = BaseRequest(deviceId, token)
+            val request = BaseRequest(
+                deviceId = deviceId,
+                deviceToken = token,
+                osVersion = android.os.Build.VERSION.RELEASE,
+                deviceModel = android.os.Build.MODEL,
+                deviceBrand = android.os.Build.BRAND,
+                appVersion = "1.1.0"
+            )
             val response = api.connectDevice(request)
 
             if (response.isSuccessful) {
@@ -88,7 +95,18 @@ class GatewayRepository @Inject constructor(
         val devToken = preferencesManager.deviceToken ?: return@withContext Result.failure(Exception("Device not paired"))
 
         try {
-            val req = HeartbeatRequest(devId, devToken, battery, signal, charging, networkType)
+            val req = HeartbeatRequest(
+                deviceId = devId,
+                deviceToken = devToken,
+                batteryLevel = battery,
+                signalStrength = signal,
+                charging = charging,
+                networkType = networkType,
+                osVersion = android.os.Build.VERSION.RELEASE,
+                deviceModel = android.os.Build.MODEL,
+                deviceBrand = android.os.Build.BRAND,
+                appVersion = "1.1.0"
+            )
             val response = api.sendHeartbeat(req)
             if (response.isSuccessful) {
                 preferencesManager.lastHeartbeat = System.currentTimeMillis()
@@ -107,7 +125,16 @@ class GatewayRepository @Inject constructor(
         val devToken = preferencesManager.deviceToken ?: return@withContext emptyList()
 
         try {
-            val response = api.pollDevice(BaseRequest(devId, devToken))
+            val response = api.pollDevice(
+                BaseRequest(
+                    deviceId = devId,
+                    deviceToken = devToken,
+                    osVersion = android.os.Build.VERSION.RELEASE,
+                    deviceModel = android.os.Build.MODEL,
+                    deviceBrand = android.os.Build.BRAND,
+                    appVersion = "1.1.0"
+                )
+            )
             if (response.isSuccessful) {
                 response.body()?.messages ?: emptyList()
             } else {

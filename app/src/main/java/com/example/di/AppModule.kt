@@ -87,7 +87,13 @@ object AppModule {
                         }
                     }
 
-                    request = request.newBuilder().url(newUrlBuilder.build()).build()
+                    val builder = request.newBuilder().url(newUrlBuilder.build())
+                    val token = prefs.deviceToken?.trim()
+                    if (!token.isNullOrEmpty()) {
+                        builder.header("Authorization", "Bearer $token")
+                        builder.header("apikey", token)
+                    }
+                    request = builder.build()
                 }
             }
             chain.proceed(request)

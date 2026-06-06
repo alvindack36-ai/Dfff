@@ -99,7 +99,7 @@ class MainActivity : ComponentActivity() {
                                 onQrScanned = { rawJson ->
                                     val parsed = parseQrCredentials(rawJson)
                                     if (parsed != null) {
-                                        Log.i(TAG, "QR decoded credentials successfully: ${parsed.deviceId}")
+                                        Log.i(TAG, "QR decoded & verified successfully: ${parsed.deviceId}")
                                         viewModel.connectDevicePair(
                                             api = parsed.api ?: "https://abjwmllylfdbcmhfqwvk.supabase.co/functions/v1",
                                             devId = parsed.deviceId ?: "",
@@ -109,9 +109,8 @@ class MainActivity : ComponentActivity() {
                                             }
                                         )
                                     } else {
-                                        Log.e(TAG, "Malformed QR scanner payload decoded")
-                                        // Give simple fallback string connection try or direct connect pairing failure
-                                        viewModel.connectDevicePair("", "", "INVALID_QR")
+                                        Log.e(TAG, "QR verification failed or contains placeholder parameters")
+                                        viewModel.setConnectionError("Scanned QR code failed verification: Malformed or contains mock placeholder values.")
                                         currentNavigationState = "onboarding"
                                     }
                                 }
@@ -212,9 +211,9 @@ class MainActivity : ComponentActivity() {
         }
     }
 
-    // JSON Model representing decoded values scan result
+    // JSON Model representing decoded values scan result with strict verification
     private fun parseQrCredentials(rawJson: String): QrCredentialsDecoded? {
-        return try {
+        val parsed = try {
             val adapter = moshi.adapter(QrCredentialsDecoded::class.java)
             adapter.fromJson(rawJson.trim())
         } catch (e: Exception) {
@@ -235,6 +234,44 @@ class MainActivity : ComponentActivity() {
                 null
             }
         }
+
+        if (parsed == null) return null
+
+        val deviceId = parsed.deviceId?.trim() ?: ""
+        val deviceToken = parsed.deviceToken?.trim() ?: ""
+        val api = parsed.api?.trim() ?: ""
+
+        // Strict validation checks
+        if (deviceId.isBlank() || deviceToken.isBlank()) {
+            Log.e(TAG, "QR verification failed: Blank Device ID or Token")
+            return null
+        }
+
+        // Check for placeholder text or invalid strings
+        if (deviceId.contains("placeholder", ignoreCase = true) || deviceId.contains("your-device", ignoreCase = true)) {
+            Log.e(TAG, "QR verification failed: Contains placeholder Device ID")
+            return null
+        }
+        if (deviceToken.contains("placeholder", ignoreCase = true) || deviceToken.contains("your-device", ignoreCase = true) || deviceToken.contains("dtk_1234", ignoreCase = true)) {
+            Log.e(TAG, "QR verification failed: Contains placeholder Token")
+            return null
+        }
+
+        // Check token strength / length
+        if (deviceToken.length < 8) {
+            Log.e(TAG, "QR verification failed: Token is too short (minimum 8 characters)")
+            return null
+        }
+
+        // Check API URL scheme if present
+        if (api.isNotEmpty()) {
+            if (!api.startsWith("http://") && !api.startsWith("https://")) {
+                Log.e(TAG, "QR verification failed: Invalid URL scheme")
+                return null
+            }
+        }
+
+        return parsed
     }
 }
 

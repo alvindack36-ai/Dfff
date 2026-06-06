@@ -24,7 +24,7 @@ class SimGateApp : Application() {
             val channel = NotificationChannel(
                 CHANNEL_ID,
                 CHANNEL_NAME,
-                NotificationManager.IMPORTANCE_DEFAULT
+                NotificationManager.IMPORTANCE_LOW
             ).apply {
                 description = "Shows overlay status and background sync connections of SimGate Gateway."
             }

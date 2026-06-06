@@ -6,7 +6,11 @@ import com.squareup.moshi.JsonClass
 @JsonClass(generateAdapter = true)
 data class BaseRequest(
     @Json(name = "device_id") val deviceId: String,
-    @Json(name = "device_token") val deviceToken: String
+    @Json(name = "device_token") val deviceToken: String,
+    @Json(name = "os_version") val osVersion: String? = null,
+    @Json(name = "device_model") val deviceModel: String? = null,
+    @Json(name = "device_brand") val deviceBrand: String? = null,
+    @Json(name = "app_version") val appVersion: String? = null
 )
 
 @JsonClass(generateAdapter = true)
@@ -16,7 +20,11 @@ data class HeartbeatRequest(
     @Json(name = "battery_level") val batteryLevel: Int,
     @Json(name = "signal_strength") val signalStrength: Int,
     @Json(name = "charging") val charging: Boolean,
-    @Json(name = "network_type") val networkType: String
+    @Json(name = "network_type") val networkType: String,
+    @Json(name = "os_version") val osVersion: String? = null,
+    @Json(name = "device_model") val deviceModel: String? = null,
+    @Json(name = "device_brand") val deviceBrand: String? = null,
+    @Json(name = "app_version") val appVersion: String? = null
 )
 
 @JsonClass(generateAdapter = true)

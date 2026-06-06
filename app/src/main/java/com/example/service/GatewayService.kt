@@ -131,8 +131,12 @@ class GatewayService : Service() {
         }
 
         val powerManager = getSystemService(Context.POWER_SERVICE) as PowerManager
-        wakeLock = powerManager.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "SimGate::SmsLock").apply {
-            acquire()
+        try {
+            wakeLock = powerManager.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "SimGate::SmsLock").apply {
+                setReferenceCounted(false)
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to create wake lock in onCreate", e)
         }
 
         connectivityManager = getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
@@ -179,6 +183,7 @@ class GatewayService : Service() {
             while (isActive) {
                 try {
                     if (isNetworkAvailable && prefs.isPaired) {
+                        acquireTemporaryWakeLock(10000L)
                         val batteryPct = getBatteryPercentage()
                         val isCharging = getIsCharging()
                         val netType = getNetworkType()
@@ -203,6 +208,7 @@ class GatewayService : Service() {
             while (isActive) {
                 try {
                     if (isNetworkAvailable && prefs.isPaired) {
+                        acquireTemporaryWakeLock(10000L)
                         val batteryPct = getBatteryPercentage()
                         pollIntervalMs = if (batteryPct < 15) 30000L else 5000L
 
@@ -264,6 +270,7 @@ class GatewayService : Service() {
     }
 
     private suspend fun sendSmsTask(task: SmsTask) {
+        acquireTemporaryWakeLock(15000L)
         withContext(Dispatchers.Main) {
             try {
                 // Check selection preference
@@ -333,6 +340,7 @@ class GatewayService : Service() {
     }
 
     private suspend fun handleSmsSentResult(messageId: String, resultCode: Int) {
+        acquireTemporaryWakeLock(15000L)
         val currentRecord = repository.getMessageById(messageId) ?: return
         
         try {
@@ -486,8 +494,24 @@ class GatewayService : Service() {
             .setContentIntent(pendingIntent)
             .addAction(android.R.drawable.ic_menu_close_clear_cancel, "Stop Gateway", stopPendingIntent)
             .setOngoing(true)
-            .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+            .setPriority(NotificationCompat.PRIORITY_LOW)
+            .setOnlyAlertOnce(true)
             .build()
+    }
+
+    private fun acquireTemporaryWakeLock(timeoutMs: Long = 10000L) {
+        try {
+            if (wakeLock == null) {
+                val powerManager = getSystemService(Context.POWER_SERVICE) as PowerManager
+                wakeLock = powerManager.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "SimGate::SmsLock").apply {
+                    setReferenceCounted(false)
+                }
+            }
+            wakeLock?.acquire(timeoutMs)
+            Log.d(TAG, "Temporary wake lock acquired for $timeoutMs ms")
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to acquire temporary wake lock", e)
+        }
     }
 
     private fun stopServiceGracefully() {
@@ -512,7 +536,16 @@ class GatewayService : Service() {
 
         connectivityManager?.unregisterNetworkCallback(networkCallback)
         wakeLock?.let {
-            if (it.isHeld) it.release()
+            try {
+                if (it.isHeld) {
+                    it.release()
+                }
+                Unit
+            } catch (e: Exception) {
+                Log.e(TAG, "Error releasing wake lock in stopServiceGracefully", e)
+            } finally {
+                wakeLock = null
+            }
         }
         
         serviceJob.cancel()
@@ -526,7 +559,16 @@ class GatewayService : Service() {
         _serviceStatus.value = "Stopped"
         serviceJob.cancel()
         wakeLock?.let {
-            if (it.isHeld) it.release()
+            try {
+                if (it.isHeld) {
+                    it.release()
+                }
+                Unit
+            } catch (e: Exception) {
+                Log.e(TAG, "Error releasing wake lock in onDestroy", e)
+            } finally {
+                wakeLock = null
+            }
         }
         Log.i(TAG, "onDestroy service complete")
     }
